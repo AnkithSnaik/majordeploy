@@ -1,0 +1,39 @@
+{
+  "name": "code-editor",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@clerk/nextjs": "^6.35.5",
+    "@convex-dev/auth": "^0.0.90",
+    "@monaco-editor/react": "^4.7.0",
+    "conve": "^0.0.0",
+    "convex": "^1.31.2",
+    "framer-motion": "^12.23.24",
+    "lucide-react": "^0.553.0",
+    "monaco-editor": "^0.54.0",
+    "next": "15.2.3",
+    "react": "18.2.0",
+    "react-code-blocks": "^0.1.6",
+    "react-dom": "18.2.0",
+    "react-hot-toast": "^2.6.0",
+    "react-syntax-highlighter": "^16.1.0",
+    "svix": "^1.81.0",
+    "syntax-highlighter": "^0.0.3",
+    "x": "^0.1.2",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  }
+}
