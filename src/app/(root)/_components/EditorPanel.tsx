@@ -5,24 +5,44 @@ import { defineMonacoThemes, LANGUAGE_CONFIG } from "../_constants";
 import { Editor } from "@monaco-editor/react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { RotateCcwIcon, ShareIcon, TypeIcon } from "lucide-react";
-import { useClerk } from "@clerk/nextjs";
+import { RotateCcwIcon, ShareIcon, TypeIcon, Users, WifiOff, Wifi } from "lucide-react";
+import { useClerk, useUser } from "@clerk/nextjs";
 import { EditorPanelSkeleton } from "./EditorPanelSkeleton";
 import useMounted from "@/hooks/useMounted";
 import ShareSnippetDialog from "./ShareSnippetDialog";
+import { useCollaborationStore } from "@/store/useCollaborationStore";
+import CollaborationDialog from "./CollaborationDialog";
+import { useCollaboration } from "../../../../hooks/useCollaboration";
 
 function EditorPanel() {
   const clerk = useClerk();
+  const { user } = useUser();
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
-  const { language, theme, fontSize, editor, setFontSize, setEditor } = useCodeEditorStore();
+  const [isCollabDialogOpen, setIsCollabDialogOpen] = useState(false);
+  const { language, theme, fontSize, editor, setFontSize, setEditor, setLanguage } = useCodeEditorStore();
+  const { roomId, isCollaborating } = useCollaborationStore();
 
   const mounted = useMounted();
+
+  const { users, isConnected, totalUsers } = useCollaboration({
+    roomId: isCollaborating ? roomId : null,
+    userId: user?.id || 'anonymous',
+    username: user?.firstName || user?.username || 'Anonymous',
+    editor,
+    language,
+    onCodeUpdate: (code) => {
+      localStorage.setItem(`editor-code-${language}`, code);
+    },
+    onLanguageUpdate: (newLang) => {
+      setLanguage(newLang);
+    }
+  });
 
   useEffect(() => {
     const savedCode = localStorage.getItem(`editor-code-${language}`);
     const newCode = savedCode || LANGUAGE_CONFIG[language].defaultCode;
-    if (editor) editor.setValue(newCode);
-  }, [language, editor]);
+    if (editor && !isCollaborating) editor.setValue(newCode);
+  }, [language, editor, isCollaborating]);
 
   useEffect(() => {
     const savedFontSize = localStorage.getItem("editor-font-size");
@@ -36,7 +56,9 @@ function EditorPanel() {
   };
 
   const handleEditorChange = (value: string | undefined) => {
-    if (value) localStorage.setItem(`editor-code-${language}`, value);
+    if (value && !isCollaborating) {
+      localStorage.setItem(`editor-code-${language}`, value);
+    }
   };
 
   const handleFontSizeChange = (newSize: number) => {
@@ -58,10 +80,42 @@ function EditorPanel() {
             </div>
             <div>
               <h2 className="text-sm font-medium text-white">Code Editor</h2>
-              <p className="text-xs text-gray-500">Write and execute your code</p>
+              <p className="text-xs text-gray-500">
+                {isCollaborating ? `Room: ${roomId}` : 'Write and execute your code'}
+              </p>
             </div>
           </div>
+          
           <div className="flex items-center gap-3">
+            {/* Collaboration Status */}
+            {isCollaborating && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-[#1e1e2e] rounded-lg ring-1 ring-white/5">
+                {isConnected ? (
+                  <Wifi className="w-4 h-4 text-green-400" />
+                ) : (
+                  <WifiOff className="w-4 h-4 text-red-400" />
+                )}
+                <span className="text-sm text-gray-400">{totalUsers} online</span>
+                <div className="flex -space-x-2">
+                  {users.slice(0, 3).map((u) => (
+                    <div
+                      key={u._id}
+                      className="w-6 h-6 rounded-full ring-2 ring-[#1e1e2e] flex items-center justify-center text-xs font-medium text-white"
+                      style={{ backgroundColor: u.color }}
+                      title={u.username}
+                    >
+                      {u.username[0].toUpperCase()}
+                    </div>
+                  ))}
+                  {users.length > 3 && (
+                    <div className="w-6 h-6 rounded-full ring-2 ring-[#1e1e2e] bg-gray-600 flex items-center justify-center text-xs text-white">
+                      +{users.length - 3}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Font Size Slider */}
             <div className="flex items-center gap-3 px-3 py-2 bg-[#1e1e2e] rounded-lg ring-1 ring-white/5">
               <TypeIcon className="size-4 text-gray-400" />
@@ -88,6 +142,23 @@ function EditorPanel() {
               aria-label="Reset to default code"
             >
               <RotateCcwIcon className="size-4 text-gray-400" />
+            </motion.button>
+
+            {/* Collaborate Button */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setIsCollabDialogOpen(true)}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-opacity ${
+                isCollaborating
+                  ? 'bg-gradient-to-r from-green-500 to-green-600 opacity-90 hover:opacity-100'
+                  : 'bg-gradient-to-r from-purple-500 to-purple-600 opacity-90 hover:opacity-100'
+              }`}
+            >
+              <Users className="size-4 text-white" />
+              <span className="text-sm font-medium text-white">
+                {isCollaborating ? 'Connected' : 'Collaborate'}
+              </span>
             </motion.button>
 
             {/* Share Button */}
@@ -142,6 +213,7 @@ function EditorPanel() {
         </div>
       </div>
       {isShareDialogOpen && <ShareSnippetDialog onClose={() => setIsShareDialogOpen(false)} />}
+      {isCollabDialogOpen && <CollaborationDialog onClose={() => setIsCollabDialogOpen(false)} />}
     </div>
   );
 }

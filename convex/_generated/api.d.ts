@@ -9,6 +9,7 @@
  */
 
 import type * as codeExecutions from "../codeExecutions.js";
+import type * as collaboration from "../collaboration.js";
 import type * as http from "../http.js";
 import type * as snippets from "../snippets.js";
 import type * as users from "../users.js";
@@ -21,6 +22,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   codeExecutions: typeof codeExecutions;
+  collaboration: typeof collaboration;
   http: typeof http;
   snippets: typeof snippets;
   users: typeof users;

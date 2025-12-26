@@ -1,4 +1,3 @@
-
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
@@ -43,4 +42,30 @@ export default defineSchema({
     .index("by_user_id", ["userId"])
     .index("by_snippet_id", ["snippetId"])
     .index("by_user_id_and_snippet_id", ["userId", "snippetId"]),
+
+  // Collaboration tables
+  rooms: defineTable({
+    roomId: v.string(),
+    code: v.string(),
+    language: v.string(),
+    createdAt: v.number(),
+    lastUpdated: v.number(),
+  }).index("by_room_id", ["roomId"]),
+
+  roomUsers: defineTable({
+    roomId: v.string(),
+    userId: v.string(),
+    username: v.string(),
+    color: v.string(),
+    isOnline: v.boolean(),
+    lastSeen: v.number(),
+  }).index("by_room", ["roomId"]),
+
+  roomEvents: defineTable({
+    roomId: v.string(),
+    userId: v.string(),
+    type: v.string(), // 'code_change', 'cursor_move', 'language_change'
+    data: v.any(),
+    timestamp: v.number(),
+  }).index("by_room", ["roomId"]),
 });
